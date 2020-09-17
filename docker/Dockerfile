@@ -30,6 +30,7 @@ RUN apt-get update \
     && python -m pip install --upgrade pip \
     && python -m pip install wheel \
     && python -m pip install -r requirements.txt \
+    && python -m pip install -r requirements-contribs.txt \
     && python manage.py compilemessages \
     && chmod +x docker/entrypoint.sh \
     # remove
@@ -38,6 +39,7 @@ RUN apt-get update \
        gettext \
     && apt-get autoremove -y \
     && rm requirements.txt \
+    && rm requirements-contribs.txt \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache \
     && find . -name '__pycache__' -exec rm -r '{}' + \

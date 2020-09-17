@@ -18,6 +18,10 @@
 
 import os.path, sys, os
 
+
+#########################################
+## GENERIC
+#########################################
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 APPEND_SLASH = False
@@ -33,6 +37,10 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "taiga",
+        "USER": "taiga",
+        "PASSWORD": "taiga",
+        "HOST": "127.0.0.1",
+        "PORT": "5432"
     }
 }
 
@@ -43,8 +51,40 @@ CACHES = {
     }
 }
 
+# Session configuration (only used for admin)
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_AGE = 1209600 # (2 weeks)
 
-# CELERY
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+]
+
+# Default configuration for reverse proxy
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTOCOL", "https")
+
+# Errors report configuration
+SEND_BROKEN_LINK_EMAILS = True
+IGNORABLE_404_ENDS = (".php", ".cgi")
+IGNORABLE_404_STARTS = ("/phpmyadmin/",)
+
+ATOMIC_REQUESTS = True
+
+# Message System
+MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
+
+SECRET_KEY = "aw3+t2r(8(0kkrhg8)gx6i96v5^kv%6cfep9wxfom0%7dy0m9e"
+
+ROOT_URLCONF = "taiga.urls"
+
+WSGI_APPLICATION = "taiga.wsgi.application"
+
+#########################################
+## CELERY
+#########################################
+# Set to True to enable celery and work in async mode or False
+# to disable it and work in sync mode. You can find the celery
+# settings in settings/celery.py and settings/celery-local.py
 CELERY_ENABLED = False
 from kombu import Queue
 
@@ -64,20 +104,9 @@ CELERY_TASK_DEFAULT_EXCHANGE_TYPE = 'topic'
 CELERY_TASK_DEFAULT_ROUTING_KEY = 'task.default'
 
 
-PASSWORD_HASHERS = [
-    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
-]
-
-# Default configuration for reverse proxy
-USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTOCOL", "https")
-
-# Errors report configuration
-SEND_BROKEN_LINK_EMAILS = True
-IGNORABLE_404_ENDS = (".php", ".cgi")
-IGNORABLE_404_STARTS = ("/phpmyadmin/",)
-
-ATOMIC_REQUESTS = True
+#########################################
+## I18N/L10N
+#########################################
 TIME_ZONE = "UTC"
 LOGIN_URL="/auth/login/"
 USE_TZ = True
@@ -184,34 +213,62 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, "taiga", "locale"),
 )
 
+#########################################
+## SITES
+#########################################
 SITES = {
-    "api": {"domain": "localhost:8000", "scheme": "http", "name": "api"},
-    "front": {"domain": "localhost:9001", "scheme": "http", "name": "front"},
+    "api": {
+        "domain": "localhost:8000",
+        "scheme": "http",
+        "name": "api"
+    },
+    "front": {
+        "domain": "localhost:9001",
+        "scheme": "http",
+        "name": "front"
+    },
 }
-
 SITE_ID = "api"
 
-# Session configuration (only used for admin)
-SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_COOKIE_AGE = 1209600 # (2 weeks)
-
-# MAIL OPTIONS
+#########################################
+## MAIL SYSTEM SETTINGS
+#########################################
 DEFAULT_FROM_EMAIL = "john@doe.com"
+#CHANGE_NOTIFICATIONS_MIN_INTERVAL = 300 #seconds
+
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# EMAIL SETTINGS EXAMPLE
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_USE_TLS = False
+#EMAIL_USE_SSL = False # You cannot use both (TLS and SSL) at the same time!
+#EMAIL_HOST = 'localhost'
+#EMAIL_PORT = 25
+#EMAIL_HOST_USER = 'user'
+#EMAIL_HOST_PASSWORD = 'password'
+
+# GMAIL SETTINGS EXAMPLE
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_USE_TLS = True
+#EMAIL_HOST = 'smtp.gmail.com'
+#EMAIL_PORT = 587
+#EMAIL_HOST_USER = 'youremail@gmail.com'
+#EMAIL_HOST_PASSWORD = 'yourpassword'
 
 DJMAIL_REAL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DJMAIL_SEND_ASYNC = True
 DJMAIL_MAX_RETRY_NUMBER = 3
 DJMAIL_TEMPLATE_EXTENSION = "jinja"
 
-# Events backend
+#########################################
+## EVENTS
+#########################################
 EVENTS_PUSH_BACKEND = "taiga.events.backends.postgresql.EventsPushBackend"
 # EVENTS_PUSH_BACKEND = "taiga.events.backends.rabbitmq.EventsPushBackend"
 # EVENTS_PUSH_BACKEND_OPTIONS = {"url": "//guest:guest@127.0.0.1/"}
 
-# Message System
-MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
-
+#########################################
+## STATIC AND MEDIA FILES
+#########################################
 # The absolute url is mandatory because attachments
 # urls depends on it. On production should be set
 # something like https://media.taiga.io/
@@ -237,8 +294,10 @@ DEFAULT_FILE_STORAGE = "taiga.base.storage.FileSystemStorage"
 
 FILE_UPLOAD_PERMISSIONS = 0o644
 
-SECRET_KEY = "aw3+t2r(8(0kkrhg8)gx6i96v5^kv%6cfep9wxfom0%7dy0m9e"
 
+#########################################
+## TEMPLATES
+#########################################
 TEMPLATES = [
     {
         "BACKEND": "django_jinja.backend.Jinja2",
@@ -280,6 +339,9 @@ TEMPLATES = [
 ]
 
 
+#########################################
+## MIDDLEWARES
+#########################################
 MIDDLEWARE = [
     "taiga.base.middleware.cors.CorsMiddleware",
     "taiga.events.middleware.SessionIDMiddleware",
@@ -295,8 +357,9 @@ MIDDLEWARE = [
 ]
 
 
-ROOT_URLCONF = "taiga.urls"
-
+#########################################
+## INSTALLED APPS
+#########################################
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -352,8 +415,17 @@ INSTALLED_APPS = [
     "raven.contrib.django.raven_compat",
 ]
 
-WSGI_APPLICATION = "taiga.wsgi.application"
 
+#########################################
+## CONTRIBS
+#########################################
+# INSTALLED_APPS += [
+#     "taiga_contrib_slack"
+# ]
+
+#########################################
+## LOGGING
+#########################################
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
@@ -445,6 +517,9 @@ AUTHENTICATION_BACKENDS = (
 MAX_AGE_AUTH_TOKEN = None
 MAX_AGE_CANCEL_ACCOUNT = 30 * 24 * 60 * 60 # 30 days in seconds
 
+#########################################
+## REST FRAMEWORK
+#########################################
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         # Mainly used by taiga-front
@@ -456,6 +531,9 @@ REST_FRAMEWORK = {
         # Application tokens auth
         "taiga.external_apps.auth_backends.Token",
     ),
+    #########################################
+    ## THROTTLING
+    #########################################
     "DEFAULT_THROTTLE_CLASSES": (
         "taiga.base.throttling.CommonThrottle",
     ),
@@ -472,6 +550,9 @@ REST_FRAMEWORK = {
         "user-detail": None,
         "user-update": None,
     },
+    # This list should contain:
+    #  - Taiga users IDs
+    #  - Valid clients IP addresses (X-Forwarded-For header)
     "DEFAULT_THROTTLE_WHITELIST": [],
     "FILTER_BACKEND": "taiga.base.filters.FilterBackend",
     "EXCEPTION_HANDLER": "taiga.base.exceptions.exception_handler",
@@ -506,6 +587,9 @@ SOUTH_MIGRATION_MODULES = {
 }
 
 
+#########################################
+## THUMBNAILS AND AVATARS
+#########################################
 THN_AVATAR_SIZE = 80                # 80x80 pixels
 THN_AVATAR_BIG_SIZE = 300           # 300x300 pixels
 THN_LOGO_SMALL_SIZE = 80            # 80x80 pixels
@@ -542,7 +626,10 @@ TAGS_PREDEFINED_COLORS = ["#fce94f", "#edd400", "#c4a000", "#8ae234",
                           "#5c3566", "#ef2929", "#cc0000", "#a40000",
                           "#2e3436",]
 
-# Feedback module settings
+#########################################
+## FEEDBACK
+#########################################
+# Note: See config in taiga-front too
 FEEDBACK_ENABLED = True
 FEEDBACK_EMAIL = "support@taiga.io"
 
@@ -575,6 +662,9 @@ WEBHOOKS_ENABLED = False
 WEBHOOKS_BLOCK_PRIVATE_ADDRESS = False
 
 
+#########################################
+## SITEMAP
+#########################################
 # If is True /front/sitemap.xml show a valid sitemap of taiga-front client
 FRONT_SITEMAP_ENABLED = False
 FRONT_SITEMAP_CACHE_TIMEOUT = 24*60*60  # In second
@@ -588,7 +678,9 @@ MAX_MEMBERSHIPS_PUBLIC_PROJECTS = None # None == no limit
 
 MAX_PENDING_MEMBERSHIPS = 30 # Max number of unconfirmed memberships in a project
 
-# DJANGO SETTINGS RESOLVER
+#########################################
+## DJANGO SETTINGS RESOLVER
+#########################################
 SR = {
     "taigaio_url": "https://taiga.io",
     "social": {
@@ -628,13 +720,27 @@ IMPORTERS = {
     }
 }
 
-# NOTE: DON'T INSERT MORE SETTINGS AFTER THIS LINE
-TEST_RUNNER="django.test.runner.DiscoverRunner"
+#########################################
+## REGISTRATION
+#########################################
 
-if "test" in sys.argv:
-    print ("\033[1;91mNo django tests.\033[0m")
-    print ("Try: \033[1;33mpy.test\033[0m")
-    sys.exit(0)
+#PUBLIC_REGISTER_ENABLED = True
+
+# LIMIT ALLOWED DOMAINS FOR REGISTER AND INVITE
+# None or [] values in USER_EMAIL_ALLOWED_DOMAINS means allow any domain
+#USER_EMAIL_ALLOWED_DOMAINS = None
+
+# PUCLIC OR PRIVATE NUMBER OF PROJECT PER USER
+#MAX_PRIVATE_PROJECTS_PER_USER = None # None == no limit
+#MAX_PUBLIC_PROJECTS_PER_USER = None # None == no limit
+#MAX_MEMBERSHIPS_PRIVATE_PROJECTS = None # None == no limit
+#MAX_MEMBERSHIPS_PUBLIC_PROJECTS = None # None == no limit
+
+# GITHUB SETTINGS
+#GITHUB_URL = "https://github.com/"
+#GITHUB_API_URL = "https://api.github.com/"
+#GITHUB_API_CLIENT_ID = "yourgithubclientid"
+#GITHUB_API_CLIENT_SECRET = "yourgithubclientsecret"
 
 # Configuration for sending notifications
 NOTIFICATIONS_CUSTOM_FILTER = False
@@ -643,3 +749,12 @@ NOTIFICATIONS_CUSTOM_FILTER = False
 MDRENDER_CACHE_ENABLE = True
 MDRENDER_CACHE_MIN_SIZE = 40
 MDRENDER_CACHE_TIMEOUT = 86400
+
+# NOTE: THIS BLOCK SHOULD BE AT THE END OF THE FILE
+TEST_RUNNER="django.test.runner.DiscoverRunner"
+
+if "test" in sys.argv:
+    print ("\033[1;91mNo django tests.\033[0m")
+    print ("Try: \033[1;33mpy.test\033[0m")
+    sys.exit(0)
+# DON'T INSERT MORE SETTINGS AFTER THIS LINE
